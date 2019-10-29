@@ -42,7 +42,7 @@
 // if your compiler has troubles with unorderedmaps, just comment the following line to use a slower std::map instead
 #define HASHMAP        // now handled with unorderedmaps instead of stdext::hash_map. Should be better supported.
 
-#define SPARSE_FLOW    // a sparse flow vector will be 10-15% slower for small problems but uses less memory and becomes faster for large problems (40k total nodes)
+//#define SPARSE_FLOW    // a sparse flow vector will be 10-15% slower for small problems but uses less memory and becomes faster for large problems (40k total nodes)
 
 #include <vector>
 #include <limits>
@@ -52,13 +52,9 @@
 #else
 #include <map>
 #endif
-//#include "core.h"
-//#include "lmath.h"
-#include <omp.h>
+//#include <omp.h>
 #include <cmath>
 
-
-//#include "sparse_array_n.h"
 #include "full_bipartitegraph.h"
 
 #define INVALIDNODE -1
@@ -466,35 +462,39 @@ namespace lemon {
 			bool findEnteringArc() {
 				Cost min_val = 0;
 
-				ArcsType N = omp_get_max_threads();
-				std::vector<Cost> minArray(N, 0);
-				std::vector<ArcsType> arcId(N);
-				ArcsType bs = (ArcsType)ceil(_block_size / (double)N);
+				//ArcsType N = omp_get_max_threads();
+				//std::vector<Cost> minArray(N, 0);
+				//std::vector<ArcsType> arcId(N);
+				//ArcsType bs = (ArcsType)ceil(_block_size / (double)N);
 
 				for (ArcsType i = 0; i < _search_arc_num; i += _block_size) {
 
 					ArcsType e;
 					ArcsType j;
-#pragma omp parallel
-					{
-						int t = omp_get_thread_num();
+//#pragma omp parallel
+					//{
+						//int t = omp_get_thread_num();
 
-#pragma omp for schedule(static, bs) lastprivate(e)
+//#pragma omp for schedule(static, bs) lastprivate(e)
 						for (j = 0; j < std::min(i + _block_size, _search_arc_num) - i; j++) {
 							e = (_next_arc + i + j); if (e >= _search_arc_num) e -= _search_arc_num;
 							Cost c = _state[e] * (_cost[e] + _pi[_source[e]] - _pi[_target[e]]);
-							if (c < minArray[t]) {
+							/*if (c < minArray[t]) {
 								minArray[t] = c;
 								arcId[t] = e;
+							}*/
+							if (c < min_val) {
+								min_val = c;
+								_in_arc = e;
 							}
 						}
-					}
+					/*}
 					for (int j = 0; j < N; j++) {
 						if (minArray[j] < min_val) {
 							min_val = minArray[j];
 							_in_arc = arcId[j];
 						}
-					}
+					}*/
 					Cost a = std::abs(_pi[_source[_in_arc]]) > std::abs(_pi[_target[_in_arc]]) ? std::abs(_pi[_source[_in_arc]]) : std::abs(_pi[_target[_in_arc]]);
 					a = a > std::abs(_cost[_in_arc]) ? a : std::abs(_cost[_in_arc]);
 					if (min_val < -std::numeric_limits<Cost>::epsilon()*a) {
@@ -523,13 +523,13 @@ namespace lemon {
 
 					ArcsType maxJ = std::min(i + _block_size, _search_arc_num) - i;
 					ArcsType j;
-#pragma omp parallel
+//#pragma omp parallel
 					{
 						int t = omp_get_thread_num();
 						Cost minV = 0;
 						ArcsType arcStart = _next_arc + i;
 						ArcsType arc = -1;
-#pragma omp for schedule(static, bs)
+//#pragma omp for schedule(static, bs)
 						for (j = 0; j < maxJ; j++) {
 							ArcsType e = arcStart + j; if (e >= _search_arc_num) e -= _search_arc_num;
 							Cost c = _state[e] * (_cost[e] + _pi[_source[e]] - _pi[_target[e]]);
@@ -894,7 +894,7 @@ namespace lemon {
 				num_big_subsequences = _arc_num % mixingCoeff;
 				num_total_big_subsequence_numbers = subsequence_length * num_big_subsequences;
 
-#pragma omp parallel for schedule(static)
+//#pragma omp parallel for schedule(static)
 				for (Arc a = 0; a <= _graph.maxArcId(); a++) {   // --a <=> _graph.next(a)  , -1 == INVALID 
 					ArcsType i = sequence(_graph.maxArcId()-a);
 					_source[i] = _node_id(_graph.source(a));
@@ -1448,7 +1448,7 @@ namespace lemon {
 				} else {
 					arc_vector.resize(demand_nodes.size());
 					// Find the min. cost incomming arc for each demand node
-#pragma omp parallel for
+//#pragma omp parallel for
 					for (ArcsType i = 0; i < ArcsType(demand_nodes.size()); ++i) {
 						Node v = demand_nodes[i];
 						Cost min_cost = std::numeric_limits<Cost>::max();
@@ -1468,7 +1468,7 @@ namespace lemon {
 			} else {
 				arc_vector.resize(supply_nodes.size());
 				// Find the min. cost outgoing arc for each supply node
-#pragma omp parallel for
+//#pragma omp parallel for
 				for (int i = 0; i < int(supply_nodes.size()); ++i) {
 					Node u = supply_nodes[i];
 					Cost min_cost = std::numeric_limits<Cost>::max();
