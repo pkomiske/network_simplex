@@ -28,211 +28,201 @@
 
 #include <cstdint>
 
-///\ingroup graphs
-///\file
-///\brief FullBipartiteDigraph and FullBipartiteGraph classes.
-
-
 namespace lemon {
 
-	///This \c \#define creates convenient type definitions for the following
-	///types of \c Digraph: \c Node,  \c NodeIt, \c Arc, \c ArcIt, \c InArcIt,
-	///\c OutArcIt, \c BoolNodeMap, \c IntNodeMap, \c DoubleNodeMap,
-	///\c BoolArcMap, \c IntArcMap, \c DoubleArcMap.
-	///
-	///\note If the graph type is a dependent type, ie. the graph type depend
-	///on a template parameter, then use \c TEMPLATE_DIGRAPH_TYPEDEFS()
-	///macro.
-#define DIGRAPH_TYPEDEFS(Digraph)                                       \
-  typedef Digraph::Node Node;                                           \
-  typedef Digraph::Arc Arc;                                             \
+///This \c \#define creates convenient type definitions for the following
+///types of \c Digraph: \c Node,  \c NodeIt, \c Arc, \c ArcIt, \c InArcIt,
+///\c OutArcIt, \c BoolNodeMap, \c IntNodeMap, \c DoubleNodeMap,
+///\c BoolArcMap, \c IntArcMap, \c DoubleArcMap.
+///
+///\note If the graph type is a dependent type, ie. the graph type depend
+///on a template parameter, then use \c TEMPLATE_DIGRAPH_TYPEDEFS()
+///macro.
+#define DIGRAPH_TYPEDEFS(Digraph) \
+  typedef Digraph::Node Node;     \
+  typedef Digraph::Arc Arc;       \
 
 
-	///Create convenience typedefs for the digraph types and iterators
+///Create convenience typedefs for the digraph types and iterators
 
-	///\see DIGRAPH_TYPEDEFS
-	///
-	///\note Use this macro, if the graph type is a dependent type,
-	///ie. the graph type depend on a template parameter.
-#define TEMPLATE_DIGRAPH_TYPEDEFS(Digraph)                              \
-  typedef typename Digraph::Node Node;                                  \
-  typedef typename Digraph::Arc Arc;                                    \
-
-
-  class FullBipartiteDigraphBase {
-  public:
-
-    typedef FullBipartiteDigraphBase Digraph;
-
-    //class Node;
-	typedef int Node;
-    //class Arc;
-	typedef int64_t Arc;
-
-  protected:
-
-    int _node_num;
-	int64_t _arc_num;
-	
-    FullBipartiteDigraphBase() {}
-
-    void construct(int n1, int n2) { _node_num = n1+n2; _arc_num = (int64_t)n1 * (int64_t)n2; _n1=n1; _n2=n2;}
-
-  public:
-
-	int _n1, _n2;
+///\see DIGRAPH_TYPEDEFS
+///
+///\note Use this macro, if the graph type is a dependent type,
+///ie. the graph type depend on a template parameter.
+#define TEMPLATE_DIGRAPH_TYPEDEFS(Digraph) \
+  typedef typename Digraph::Node Node;     \
+  typedef typename Digraph::Arc Arc;       \
 
 
-    Node operator()(int ix) const { return Node(ix); }
-    static int index(const Node& node) { return node; }
+class FullBipartiteDigraphBase {
+public:
 
-    Arc arc(const Node& s, const Node& t) const {
-		if (s<_n1 && t>=_n1)
-			return Arc((int64_t)s * (int64_t)_n2 + (int64_t)(t-_n1) );
-		else
-			return Arc(-1);
-    }
+  typedef FullBipartiteDigraphBase Digraph;
+  typedef int Node;
+  typedef int64_t Arc;
 
-    int nodeNum() const { return _node_num; }
-	int64_t arcNum() const { return _arc_num; }
+protected:
 
-    int maxNodeId() const { return _node_num - 1; }
-	int64_t maxArcId() const { return _arc_num - 1; }
+  Node _node_num;
+  Arc _arc_num;
 
-    Node source(Arc arc) const { return arc / _n2; }
-    Node target(Arc arc) const { return (arc % _n2) + _n1; }
+  FullBipartiteDigraphBase() {}
 
-    static int id(Node node) { return node; }
-    static int64_t id(Arc arc) { return arc; }
+  void construct(int n1, int n2) { 
+    _node_num = n1 + n2; 
+    _arc_num = Arc(n1) * Arc(n2); 
+    _n1 = n1; 
+    _n2 = n2;
+  }
 
-    static Node nodeFromId(int id) { return Node(id);}
-    static Arc arcFromId(int64_t id) { return Arc(id);}
+public:
 
+  int _n1, _n2;
 
-    Arc findArc(Node s, Node t, Arc prev = -1) const {
-      return prev == -1 ? arc(s, t) : -1;
-    }
+  Node operator()(int ix) const { return Node(ix); }
+  static int index(const Node & node) { return node; }
 
-    void first(Node& node) const {
-      node = _node_num - 1;
-    }
+  Arc arc(const Node & s, const Node & t) const {
+	if (s < _n1 && t >= _n1)
+		return Arc((int64_t) s * (int64_t) _n2 + (int64_t)(t - _n1));
+	else
+		return Arc(-1);
+  }
 
-    static void next(Node& node) {
-      --node;
-    }
+  int nodeNum() const { return _node_num; }
+  int64_t arcNum() const { return _arc_num; }
 
-    void first(Arc& arc) const {
-      arc = _arc_num - 1;
-    }
+  int maxNodeId() const { return _node_num - 1; }
+  int64_t maxArcId() const { return _arc_num - 1; }
 
-    static void next(Arc& arc) {
-      --arc;
-    }
+  Node source(Arc arc) const { return arc / _n2; }
+  Node target(Arc arc) const { return (arc % _n2) + _n1; }
 
-    void firstOut(Arc& arc, const Node& node) const {
-		if (node>=_n1)
-			arc = -1;
-		else
-			arc = (node + 1) * _n2 - 1;
-    }
+  static int id(Node node) { return node; }
+  static int64_t id(Arc arc) { return arc; }
 
-    void nextOut(Arc& arc) const {
-      if (arc % _n2 == 0) arc = 0;
-      --arc;
-    }
+  static Node nodeFromId(int id) { return Node(id);}
+  static Arc arcFromId(int64_t id) { return Arc(id);}
 
-    void firstIn(Arc& arc, const Node& node) const {
-		if (node<_n1)
-			arc = -1;
-		else
-			arc = _arc_num + node - _node_num;
-    }
+  Arc findArc(Node s, Node t, Arc prev = -1) const {
+    return prev == -1 ? arc(s, t) : -1;
+  }
 
-    void nextIn(Arc& arc) const {
-      arc -= _n2;
-      if (arc < 0) arc = -1;
-    }
+  void first(Node & node) const {
+    node = _node_num - 1;
+  }
 
-  };
+  static void next(Node & node) {
+    --node;
+  }
 
-  /// \ingroup graphs
+  void first(Arc & arc) const {
+    arc = _arc_num - 1;
+  }
+
+  static void next(Arc & arc) {
+    --arc;
+  }
+
+  void firstOut(Arc & arc, const Node & node) const {
+	if (node >= _n1)
+		arc = -1;
+	else
+		arc = (node + 1) * _n2 - 1;
+  }
+
+  void nextOut(Arc & arc) const {
+    if (arc % _n2 == 0) arc = 0;
+    --arc;
+  }
+
+  void firstIn(Arc & arc, const Node & node) const {
+	if (node < _n1)
+		arc = -1;
+	else
+		arc = _arc_num + node - _node_num;
+  }
+
+  void nextIn(Arc & arc) const {
+    arc -= _n2;
+    if (arc < 0) arc = -1;
+  }
+};
+
+/// \ingroup graphs
+///
+/// \brief A directed full graph class.
+///
+/// FullBipartiteDigraph is a simple and fast implementation of directed full
+/// (complete) graphs. It contains an arc from each node to each node
+/// (including a loop for each node), therefore the number of arcs
+/// is the square of the number of nodes.
+/// This class is completely static and it needs constant memory space.
+/// Thus you can neither add nor delete nodes or arcs, however
+/// the structure can be resized using resize().
+///
+/// This type fully conforms to the \ref concepts::Digraph "Digraph concept".
+/// Most of its member functions and nested classes are documented
+/// only in the concept class.
+///
+/// This class provides constant time counting for nodes and arcs.
+///
+/// \note FullBipartiteDigraph and FullBipartiteGraph classes are very similar,
+/// but there are two differences. While this class conforms only
+/// to the \ref concepts::Digraph "Digraph" concept, FullBipartiteGraph
+/// conforms to the \ref concepts::Graph "Graph" concept,
+/// moreover FullBipartiteGraph does not contain a loop for each
+/// node as this class does.
+///
+/// \sa FullBipartiteGraph
+class FullBipartiteDigraph : public FullBipartiteDigraphBase {
+  typedef FullBipartiteDigraphBase Parent;
+
+public:
+
+  /// \brief Default constructor.
   ///
-  /// \brief A directed full graph class.
+  /// Default constructor. The number of nodes and arcs will be zero.
+  FullBipartiteDigraph() { construct(0,0); }
+
+  /// \brief Constructor
   ///
-  /// FullBipartiteDigraph is a simple and fast implmenetation of directed full
-  /// (complete) graphs. It contains an arc from each node to each node
-  /// (including a loop for each node), therefore the number of arcs
-  /// is the square of the number of nodes.
-  /// This class is completely static and it needs constant memory space.
-  /// Thus you can neither add nor delete nodes or arcs, however
-  /// the structure can be resized using resize().
+  /// Constructor.
+  /// \param n The number of the nodes.
+  FullBipartiteDigraph(int n1, int n2) { construct(n1, n2); }
+
+
+  /// \brief Returns the node with the given index.
   ///
-  /// This type fully conforms to the \ref concepts::Digraph "Digraph concept".
-  /// Most of its member functions and nested classes are documented
-  /// only in the concept class.
+  /// Returns the node with the given index. Since this structure is
+  /// completely static, the nodes can be indexed with integers from
+  /// the range <tt>[0..nodeNum()-1]</tt>.
+  /// The index of a node is the same as its ID.
+  /// \sa index()
+  Node operator()(int ix) const { return Parent::operator()(ix); }
+
+  /// \brief Returns the index of the given node.
   ///
-  /// This class provides constant time counting for nodes and arcs.
+  /// Returns the index of the given node. Since this structure is
+  /// completely static, the nodes can be indexed with integers from
+  /// the range <tt>[0..nodeNum()-1]</tt>.
+  /// The index of a node is the same as its ID.
+  /// \sa operator()()
+  static int index(const Node & node) { return Parent::index(node); }
+
+  /// \brief Returns the arc connecting the given nodes.
   ///
-  /// \note FullBipartiteDigraph and FullBipartiteGraph classes are very similar,
-  /// but there are two differences. While this class conforms only
-  /// to the \ref concepts::Digraph "Digraph" concept, FullBipartiteGraph
-  /// conforms to the \ref concepts::Graph "Graph" concept,
-  /// moreover FullBipartiteGraph does not contain a loop for each
-  /// node as this class does.
-  ///
-  /// \sa FullBipartiteGraph
-  class FullBipartiteDigraph : public FullBipartiteDigraphBase {
-    typedef FullBipartiteDigraphBase Parent;
+  /// Returns the arc connecting the given nodes.
+  /*Arc arc(Node u, Node v) const {
+    return Parent::arc(u, v);
+  }*/
 
-  public:
-
-    /// \brief Default constructor.
-    ///
-    /// Default constructor. The number of nodes and arcs will be zero.
-    FullBipartiteDigraph() { construct(0,0); }
-
-    /// \brief Constructor
-    ///
-    /// Constructor.
-    /// \param n The number of the nodes.
-    FullBipartiteDigraph(int n1, int n2) { construct(n1, n2); }
-
-
-    /// \brief Returns the node with the given index.
-    ///
-    /// Returns the node with the given index. Since this structure is
-    /// completely static, the nodes can be indexed with integers from
-    /// the range <tt>[0..nodeNum()-1]</tt>.
-    /// The index of a node is the same as its ID.
-    /// \sa index()
-    Node operator()(int ix) const { return Parent::operator()(ix); }
-
-    /// \brief Returns the index of the given node.
-    ///
-    /// Returns the index of the given node. Since this structure is
-    /// completely static, the nodes can be indexed with integers from
-    /// the range <tt>[0..nodeNum()-1]</tt>.
-    /// The index of a node is the same as its ID.
-    /// \sa operator()()
-    static int index(const Node& node) { return Parent::index(node); }
-
-    /// \brief Returns the arc connecting the given nodes.
-    ///
-    /// Returns the arc connecting the given nodes.
-    /*Arc arc(Node u, Node v) const {
-      return Parent::arc(u, v);
-    }*/
-
-    /// \brief Number of nodes.
-    int nodeNum() const { return Parent::nodeNum(); }
-    /// \brief Number of arcs.
-	int64_t arcNum() const { return Parent::arcNum(); }
-  };
-
-
-
+  /// \brief Number of nodes.
+  int nodeNum() const { return Parent::nodeNum(); }
+  /// \brief Number of arcs.
+  int64_t arcNum() const { return Parent::arcNum(); }
+};
 
 } //namespace lemon
-
 
 #endif //LEMON_FULL_GRAPH_H
